@@ -111,3 +111,6 @@ venv.bak/
 
 # JSON files in the tests directory
 tests/*.json
+
+# Ignore vim swap files
+*.sw*
