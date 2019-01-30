@@ -29,15 +29,14 @@ def get_archived_cards(date):
     actions = fetch_actions()
     date_actions = [action for action in actions if filter_date(action, date)]
     archived_actions = [action for action in date_actions if archived(action)]
-    # TODO parse actions to get it into format
     archived_cards = []
     for action in archived_actions:
-        date = parse_date(action['date'])
+        date = parse_date(action['date']).strftime('%Y-%m-%dT%H:%M:%S')
         board_id = action['data']['board']['id']
         card_id = action['data']['card']['id']
         card_name = action['data']['card']['name']
         archived_card = {
-            'date': date.strftime('%Y-%m-%dT%H:%M:%S'),
+            'date': date,
             'board_id': board_id,
             'card_id': card_id,
             'card_name': card_name
