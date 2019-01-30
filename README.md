@@ -1,37 +1,51 @@
-# A sample Python project
+# Task Awareness
 
-A sample project that exists as an aid to the [Python Packaging User
-Guide][packaging guide]'s [Tutorial on Packaging and Distributing
-Projects][distribution tutorial].
+This software allows me to determine what I've done during the course of a day. Because the data will be stored in a database, I'll be able to review what I've done during the course of a week, month and year assuming that I have the requisite data. 
 
-This project does not aim to cover best practices for Python project
-development as a whole. For example, it does not provide guidance or tool
-recommendations for version control, documentation, or testing.
+This software is written in Python 3.
 
-[The source for this project is available here][src].
+The following function invocation lists the cards I've archived in a given day.
 
-Most of the configuration for a Python project is done in the `setup.py` file,
-an example of which is included in this project. You should edit this file
-accordingly to adapt this sample project to your needs.
+```
+from taskawareness import trello
+trello.get_archived_cards('2019-01-09')
+```
 
-----
+The above function invocation returns the following output.
 
-This is the README file for the project.
+```
+[
+  'Pack stationary for work'
+]
+```
 
-The file should use UTF-8 encoding and can be written using
-[reStructuredText][rst] or [markdown][md use] with the appropriate [key set][md
-use]. It will be used to generate the project webpage on PyPI and will be
-displayed as the project homepage on common code-hosting services, and should be
-written for that purpose.
+The following function invocation lists the check list items I've completed in a given day.
 
-Typical contents for this file would include an overview of the project, basic
-usage examples, etc. Generally, including the project changelog in here is not a
-good idea, although a simple “What's New” section for the most recent version
-may be appropriate.
+```
+from taskawareness import trello
+trello.get_completed_items('2019-01-09')
+```
 
-[packaging guide]: https://packaging.python.org
-[distribution tutorial]: https://packaging.python.org/en/latest/distributing.html
-[src]: https://github.com/pypa/sampleproject
-[rst]: http://docutils.sourceforge.net/rst.html
-[md]: https://tools.ietf.org/html/rfc7764#section-3.5 "CommonMark variant"
-[md use]: https://packaging.python.org/specifications/core-metadata/#description-content-type-optional
+The above function invocation returns the following output.
+
+```
+[
+  'Find blue cross blue shield card on Get a therapist',
+  'Do laundry on Laundry',
+  'Fold laundry on Laundry',
+  'Write README that describes set up and intended use on Trello diff report'
+]
+```
+
+If you were to run the following function invocation on January 20, 2019 you would get all of the check list items I've completed and card's I've archived from January 13, 2019 to January 19, 2019, which is the week prior
+
+```
+from taskawareness import trello
+trello.generate_report('week to day')
+```
+
+#TODO add expected output for a report for a week of January 13, 2019 to January 19, 2019
+
+If you were to run the same function invocation as above on January 24, 2019 you would get all of the check list items I've completed and card's I've archived from January 20, 2019 to January 23, 2019.
+
+#TODO add expected output for a report for a week of January 20, 2019 to January 23, 2019
