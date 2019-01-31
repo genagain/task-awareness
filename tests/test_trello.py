@@ -17,7 +17,7 @@ def test_get_archived_cards(monkeypatch):
 
     archived_cards = [
         {
-            'date': '2019-01-29T19:50:47',
+            'datetime': '2019-01-29T19:50:47',
             'board_id': '5c4ef5558ac287209796dace',
             'card_id': '5c50f4ddb89030449f74f47b',
             'card_name': 'Testing'
