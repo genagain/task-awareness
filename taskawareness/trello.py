@@ -17,12 +17,15 @@ def archived(card):
     else:
         return False
 
-def parse_date(date):
+def parse_date(date, convert_est=False):
     datetime_utc = datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%fZ')
-    return datetime_utc - timedelta(hours=5)
+    if convert_est:
+        return datetime_utc - timedelta(hours=5)
+    else:
+        return datetime_utc
 
 def filter_date(action, date):
-    datetime_est = parse_date(action['date'])
+    datetime_est = parse_date(action['date'], convert_est=True)
     return date == datetime_est.strftime('%Y-%m-%d')
 
 def get_archived_cards(date):
