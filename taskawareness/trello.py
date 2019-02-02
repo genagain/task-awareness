@@ -30,17 +30,22 @@ def filter_date(action, date):
     datetime_est = parse_date(action['date'], convert_est=True)
     return date == datetime_est.strftime('%Y-%m-%d')
 
-def execute_sql(query):
-    # TODO make this a test DB
-
+def connect_db(dict_cursor=False):
+    # TODO make this environment aware with some environment variable or somethin
     conn = psycopg2.connect("dbname=taskawareness_dev user=postgres")
+    if dict_cursor:
+        cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    else:
+        cur = conn.cursor()
 
-    cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
+    return conn, cur
+
+def execute_select(query):
+    all_records = []
+    _, cur = connect_db(dict_cursor=True)
+
     cur.execute(query)
 
-    # TODO consider breaking up connection and reading records
-
-    all_records = []
     for raw_record in cur.fetchall():
         record = [(key,value.strftime('%Y-%m-%d %H:%M:%S'))
                   if type(value).__name__ == 'datetime'
@@ -54,12 +59,12 @@ def execute_sql(query):
     return all_records
 
 def sequential_insert(records):
-    attributes = ', '.join(records[0].keys())
+    attributes = records[0].keys()
+    formatted_attributes = ', '.join(attributes)
+    placeholders = ', '.join(['%s' for i in range(len(attributes))])
 
-    insert_query = "INSERT INTO cards (datetime, board_id, card_id, card_name) VALUES (%s, %s, %s, %s)"
-
-    conn = psycopg2.connect("dbname=taskawareness_dev user=postgres")
-    cur = conn.cursor()
+    insert_query = f"INSERT INTO cards ({formatted_attributes}) VALUES ({placeholders})"
+    conn, cur = connect_db()
 
     for record in records:
         data = tuple(record.values())

@@ -21,12 +21,12 @@ def test_store_archived_cards(monkeypatch):
 
     conn = psycopg2.connect("dbname=taskawareness_dev user=postgres")
     cur = conn.cursor()
+    # TODO make this relative project root
     cur.execute(open('../schema.sql', 'r').read())
     conn.commit()
 
     actions = trello.fetch_actions()
 
-    # TODO make sure this passes with an empty table
     trello.store_archived_cards(actions, '2019-01-29')
 
     expected_archived_cards = [
@@ -39,6 +39,6 @@ def test_store_archived_cards(monkeypatch):
     ]
 
     query = 'SELECT datetime, board_id, card_id, card_name FROM cards;'
-    actual_archived_cards = trello.execute_sql(query)
+    actual_archived_cards = trello.execute_select(query)
 
     assert actual_archived_cards == expected_archived_cards
