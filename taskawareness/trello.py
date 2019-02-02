@@ -13,9 +13,9 @@ def fetch_actions():
     return []
 
 
-def archived(card):
-    if card['type'] == 'updateCard':
-        return card['data']['card']['closed'] and not card['data']['old']['closed']
+def archived(action):
+    if action['type'] == 'updateCard':
+        return action['data']['card'].get('closed', False) and not action['data']['old'].get('closed', False)
     else:
         return False
 
@@ -103,6 +103,7 @@ def store_completed_items(actions, date):
 # TODO make this a DB read operation
 def get_archived_cards(date):
     # TODO parsing archived cards a DB write operation
+    # TODO make sure the datetime is in EST
     actions = fetch_actions()
     date_actions = [action for action in actions if filter_date(action, date)]
     archived_actions = [action for action in date_actions if archived(action)]
