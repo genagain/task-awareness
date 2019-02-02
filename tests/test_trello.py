@@ -1,12 +1,12 @@
 import json
 
 from freezegun import freeze_time
+import psycopg2
 
 from taskawareness import trello
 
 
 # TODO make a fixture that sets up and tears down tables
-# TODO make a schema file
 
 def test_store_archived_cards(monkeypatch):
     def mock_fetch_actions():
@@ -18,6 +18,11 @@ def test_store_archived_cards(monkeypatch):
         return data
 
     monkeypatch.setattr(trello, 'fetch_actions', mock_fetch_actions)
+
+    conn = psycopg2.connect("dbname=taskawareness_dev user=postgres")
+    cur = conn.cursor()
+    cur.execute(open('../schema.sql', 'r').read())
+    conn.commit()
 
     actions = trello.fetch_actions()
 
