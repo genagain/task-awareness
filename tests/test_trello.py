@@ -6,8 +6,8 @@ from taskawareness import trello
 
 
 # TODO make a fixture that sets up and tears down tables
+# TODO make a schema file
 
-@freeze_time("Jan 29, 2019")
 def test_store_archived_cards(monkeypatch):
     def mock_fetch_actions():
         # TODO make this relative project root
@@ -26,7 +26,7 @@ def test_store_archived_cards(monkeypatch):
 
     expected_archived_cards = [
         {
-            'datetime': '2019-01-29 19:50:47',
+            'datetime': '2019-01-30 00:50:47',
             'board_id': '5c4ef5558ac287209796dace',
             'card_id': '5c50f4ddb89030449f74f47b',
             'card_name': 'Testing'
@@ -36,4 +36,5 @@ def test_store_archived_cards(monkeypatch):
     query = 'SELECT datetime, board_id, card_id, card_name FROM cards;'
     actual_archived_cards = trello.execute_sql(query)
 
+    import pdb; pdb.set_trace()
     assert actual_archived_cards == expected_archived_cards

@@ -37,7 +37,7 @@ def execute_sql(query):
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     cur.execute(query)
 
-    # TODO consider breaking up connection, execution and reading records
+    # TODO consider breaking up connection and reading records
 
     all_records = []
     for raw_record in cur.fetchall():
@@ -52,12 +52,34 @@ def execute_sql(query):
 
     return all_records
 
+# INSERT INTO cards (datetime, board_id, card_id, card_name)
+# VALUES ('2019-01-30 00:50:47-00', '5c4ef5558ac287209796dace', '5c50f4ddb89030449f74f47b', 'Testing');
+def bulk_insert(records):
+    attributes = ', '.join(records[0].keys())
+
+    insert_query = "INSERT INTO cards (datetime, board_id, card_id, card_name) VALUES (%s, %s, %s, %s)"
+
+    conn = psycopg2.connect("dbname=taskawareness_dev user=postgres")
+    cur = conn.cursor()
+
+    for record in records:
+        data = tuple(record.values())
+        # import pdb; pdb.set_trace()
+        cur.execute(insert_query, data)
+        conn.commit()
+
+    # TODO consider using bulk insert
+    # cur.execute("INSERT INTO test (num, data) VALUES (%s, %s)",
+    #     ...      (100, "abc'def"))
+    # psycopg2.extras.execute_values(cur, "INSERT INTO cards (datetime, board_id, card_id, card_name) VALUES %s", data)
+
+
 def store_archived_cards(actions, date):
     date_actions = [action for action in actions if filter_date(action, date)]
     archived_actions = [action for action in date_actions if archived(action)]
     archived_cards = []
     for action in archived_actions:
-        datetime = parse_date(action['date']).strftime('%Y-%m-%dT%H:%M:%S')
+        datetime = parse_date(action['date'])
         board_id = action['data']['board']['id']
         card_id = action['data']['card']['id']
         card_name = action['data']['card']['name']
@@ -69,6 +91,8 @@ def store_archived_cards(actions, date):
         }
         archived_cards.append(archived_card)
     # TODO bulk insert here
+    import pdb; pdb.set_trace()
+    bulk_insert(archived_cards)
 
     return True
 
