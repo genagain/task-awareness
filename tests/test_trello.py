@@ -36,5 +36,4 @@ def test_store_archived_cards(monkeypatch):
     query = 'SELECT datetime, board_id, card_id, card_name FROM cards;'
     actual_archived_cards = trello.execute_sql(query)
 
-    import pdb; pdb.set_trace()
     assert actual_archived_cards == expected_archived_cards
