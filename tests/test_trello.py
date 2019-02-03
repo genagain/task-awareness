@@ -8,6 +8,7 @@ from taskawareness import trello
 
 
 # TODO make a fixture that sets up and tears down tables
+# TODO make a fixture that sets up different kinds of cards as different variables
 
 def test_archived_closed_card():
     action = {
@@ -137,6 +138,100 @@ def test_parse_datetime_est():
 
     assert actual_datetime == expected_datetime
     assert actual_datetime.strftime('%Y-%m-%d %H:%M:%S') == '2019-01-29 19:50:47'
+
+def test_filter_date_true():
+    action = {
+        'id': '5c50f4e70a13222ac4421104',
+        'idMemberCreator': '54adf4eebc4b592a63005ea9',
+        'data': {
+            'list': {
+                'name': 'Do (Urgent and Important)',
+                'id': '5c4ef56ff04981732a524b3e'
+            },
+            'board': {
+                'shortLink': 'oKvCzrFR',
+                'name': 'I get to testing',
+                'id': '5c4ef5558ac287209796dace'
+            },
+            'card': {
+                'shortLink': 'lBvEcUwJ',
+                'idShort': 1,
+                'name': 'Testing',
+                'id': '5c50f4ddb89030449f74f47b',
+                'closed': True
+            },
+            'old': {
+                'closed': False
+            }
+        },
+        'type': 'updateCard',
+        'date': '2019-01-30T00:50:47.411Z',
+        'limits': {},
+        'memberCreator': {
+            'id': '54adf4eebc4b592a63005ea9',
+            'avatarHash': None,
+            'avatarUrl': None,
+            'fullName': 'Gen Ohta',
+            'idMemberReferrer': None,
+            'initials': 'GO',
+            'username': 'genohta'
+        }
+    }
+    assert trello.filter_date(action, '2019-01-29')
+
+def test_filter_date_false():
+    action = {
+        'id': '5c50f4e70a13222ac4421104',
+        'idMemberCreator': '54adf4eebc4b592a63005ea9',
+        'data': {
+            'list': {
+                'name': 'Do (Urgent and Important)',
+                'id': '5c4ef56ff04981732a524b3e'
+            },
+            'board': {
+                'shortLink': 'oKvCzrFR',
+                'name': 'I get to testing',
+                'id': '5c4ef5558ac287209796dace'
+            },
+            'card': {
+                'shortLink': 'lBvEcUwJ',
+                'idShort': 1,
+                'name': 'Testing',
+                'id': '5c50f4ddb89030449f74f47b',
+                'closed': True
+            },
+            'old': {
+                'closed': False
+            }
+        },
+        'type': 'updateCard',
+        'date': '2019-01-30T00:50:47.411Z',
+        'limits': {},
+        'memberCreator': {
+            'id': '54adf4eebc4b592a63005ea9',
+            'avatarHash': None,
+            'avatarUrl': None,
+            'fullName': 'Gen Ohta',
+            'idMemberReferrer': None,
+            'initials': 'GO',
+            'username': 'genohta'
+        }
+    }
+    assert not trello.filter_date(action, '2019-01-30')
+
+def test_connect_db_cursor():
+    conn, cur = trello.connect_db()
+
+    assert conn.dsn == 'dbname=taskawareness_dev user=postgres'
+    assert type(conn).__name__ == 'connection'
+    assert type(cur).__name__ == 'cursor'
+
+def test_connect_db_dict_cursor():
+    conn, cur = trello.connect_db(dict_cursor=True)
+
+    assert conn.dsn == 'dbname=taskawareness_dev user=postgres'
+    assert type(conn).__name__ == 'connection'
+    assert type(cur).__name__ == 'DictCursor'
 
 def test_store_archived_cards(monkeypatch):
     def mock_fetch_actions():
