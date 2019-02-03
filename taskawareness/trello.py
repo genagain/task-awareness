@@ -19,7 +19,7 @@ def archived(action):
     else:
         return False
 
-def parse_date(date, convert_est=False):
+def parse_datetime(date, convert_est=False):
     datetime_utc = datetime.strptime(date, '%Y-%m-%dT%H:%M:%S.%fZ')
     if convert_est:
         return datetime_utc - timedelta(hours=5)
@@ -27,7 +27,7 @@ def parse_date(date, convert_est=False):
         return datetime_utc
 
 def filter_date(action, date):
-    datetime_est = parse_date(action['date'], convert_est=True)
+    datetime_est = parse_datetime(action['date'], convert_est=True)
     return date == datetime_est.strftime('%Y-%m-%d')
 
 def connect_db(dict_cursor=False):
@@ -82,7 +82,7 @@ def store_archived_cards(actions, date):
     archived_actions = [action for action in date_actions if archived(action)]
     archived_cards = []
     for action in archived_actions:
-        datetime = parse_date(action['date'])
+        datetime = parse_datetime(action['date'])
         board_id = action['data']['board']['id']
         card_id = action['data']['card']['id']
         card_name = action['data']['card']['name']
@@ -109,7 +109,7 @@ def get_archived_cards(date):
     archived_actions = [action for action in date_actions if archived(action)]
     archived_cards = []
     for action in archived_actions:
-        datetime = parse_date(action['date']).strftime('%Y-%m-%d %H:%M:%S')
+        datetime = parse_datetime(action['date']).strftime('%Y-%m-%d %H:%M:%S')
         board_id = action['data']['board']['id']
         card_id = action['data']['card']['id']
         card_name = action['data']['card']['name']

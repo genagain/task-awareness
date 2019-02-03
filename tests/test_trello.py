@@ -1,3 +1,4 @@
+from datetime import datetime
 import json
 
 from freezegun import freeze_time
@@ -122,6 +123,20 @@ def test_archived_create_card():
         }
     }
     assert not trello.archived(action)
+
+def test_parse_datetime_utc():
+    expected_datetime = datetime(2019, 1, 30, 0, 50, 47, 411000)
+    actual_datetime = trello.parse_datetime('2019-01-30T00:50:47.411Z')
+
+    assert actual_datetime == expected_datetime
+    assert actual_datetime.strftime('%Y-%m-%d %H:%M:%S') == '2019-01-30 00:50:47'
+
+def test_parse_datetime_est():
+    expected_datetime = datetime(2019, 1, 29, 19, 50, 47, 411000)
+    actual_datetime = trello.parse_datetime('2019-01-30T00:50:47.411Z', convert_est=True)
+
+    assert actual_datetime == expected_datetime
+    assert actual_datetime.strftime('%Y-%m-%d %H:%M:%S') == '2019-01-29 19:50:47'
 
 def test_store_archived_cards(monkeypatch):
     def mock_fetch_actions():
