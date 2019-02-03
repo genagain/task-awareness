@@ -5,13 +5,14 @@ import psycopg2
 import psycopg2.extras
 import requests
 
+# TODO add docstrings to every method
+
 def fetch_actions():
     key = open('./.api_key', 'r').read().strip('\n')
     token = open('./.api_token', 'r').read().strip('\n')
 
     # TODO implement this with actual boardid
     return []
-
 
 def archived(action):
     if action['type'] == 'updateCard':

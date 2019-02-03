@@ -233,6 +233,11 @@ def test_connect_db_dict_cursor():
     assert type(conn).__name__ == 'connection'
     assert type(cur).__name__ == 'DictCursor'
 
+# TODO test execute select with different attributes you select in the query given the same data
+
+
+# TODO test sequential insert with one row and then at least 3 rows
+
 def test_store_archived_cards(monkeypatch):
     def mock_fetch_actions():
         # TODO make this relative project root
