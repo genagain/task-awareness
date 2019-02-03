@@ -222,6 +222,7 @@ def test_filter_date_false():
 def test_connect_db_cursor():
     conn, cur = trello.connect_db()
 
+    # TODO change this to taskawareness_test once I make the db connection environment aware
     assert conn.dsn == 'dbname=taskawareness_dev user=postgres'
     assert type(conn).__name__ == 'connection'
     assert type(cur).__name__ == 'cursor'
@@ -229,15 +230,74 @@ def test_connect_db_cursor():
 def test_connect_db_dict_cursor():
     conn, cur = trello.connect_db(dict_cursor=True)
 
+    # TODO change this to taskawareness_test once I make the db connection environment aware
     assert conn.dsn == 'dbname=taskawareness_dev user=postgres'
     assert type(conn).__name__ == 'connection'
     assert type(cur).__name__ == 'DictCursor'
 
-# TODO test execute select with different attributes you select in the query given the same data
-
-
 # TODO test sequential insert with one row and then at least 3 rows
 
+def test_sequential_insert_one_row():
+    records = [
+        {
+            'datetime': '2019-01-30 00:50:47',
+            'board_id': '5c4ef5558ac287209796dace',
+            'card_id': '5c50f4ddb89030449f74f47b',
+            'card_name': 'Testing'
+        }
+    ]
+
+    conn, cur = trello.connect_db()
+    # TODO make this relative project root
+    cur.execute(open('../schema.sql', 'r').read())
+    conn.commit()
+
+    trello.sequential_insert(records)
+
+    query = 'SELECT datetime, board_id, card_id, card_name FROM cards;'
+    query_results = trello.execute_select(query)
+
+    assert len(query_results) == 1
+
+def test_sequential_insert_three_rows():
+    records = [
+        {
+            'datetime': '2019-01-30 00:50:47',
+            'board_id': '5c4ef5558ac287209796dace',
+            'card_id': '5c50f4ddb89030449f74f47b',
+            'card_name': 'Testing 1'
+        },
+        {
+            'datetime': '2019-01-30 00:50:47',
+            'board_id': '5c4ef5558ac287209796dbcf',
+            'card_id': '5c50f4ddb89030449f74f5fc',
+            'card_name': 'Testing 2'
+        },
+        {
+            'datetime': '2019-01-30 00:50:47',
+            'board_id': '5c4ef5558ac287209796deac',
+            'card_id': '5c50f4ddb89030449f74f8df',
+            'card_name': 'Testing 3'
+        }
+    ]
+
+    conn, cur = trello.connect_db()
+    # TODO make this relative project root
+    cur.execute(open('../schema.sql', 'r').read())
+    conn.commit()
+
+    trello.sequential_insert(records)
+
+    query = 'SELECT datetime, board_id, card_id, card_name FROM cards;'
+    query_results = trello.execute_select(query)
+
+    assert len(query_results) == 3
+
+# TODO test execute select with different attributes you select in the query given the same data (all attribute, no date, no ids)
+
+
+# TODO test store archived cards if I didn't happen to archive cards for that day
+# TODO test store archived cards if I archived three cards for that day
 def test_store_archived_cards(monkeypatch):
     def mock_fetch_actions():
         # TODO make this relative project root
@@ -249,8 +309,7 @@ def test_store_archived_cards(monkeypatch):
 
     monkeypatch.setattr(trello, 'fetch_actions', mock_fetch_actions)
 
-    conn = psycopg2.connect("dbname=taskawareness_dev user=postgres")
-    cur = conn.cursor()
+    conn, cur = trello.connect_db()
     # TODO make this relative project root
     cur.execute(open('../schema.sql', 'r').read())
     conn.commit()
@@ -272,3 +331,5 @@ def test_store_archived_cards(monkeypatch):
     actual_archived_cards = trello.execute_select(query)
 
     assert actual_archived_cards == expected_archived_cards
+
+  # TODO test get archived card first clearing the DB, storing the card and then invoving get archived card and then make assertions
