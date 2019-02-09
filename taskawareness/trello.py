@@ -47,7 +47,12 @@ def execute_select(query):
 
     cur.execute(query)
 
-    for raw_record in cur.fetchall():
+    raw_records = cur.fetchall()
+
+    if len(raw_records) == 0:
+        return []
+
+    for raw_record in raw_records:
         record = [(key,value.strftime('%Y-%m-%d %H:%M:%S'))
                   if type(value).__name__ == 'datetime'
                   else
@@ -57,9 +62,14 @@ def execute_select(query):
 
         all_records.append(dict(record))
 
-    return all_records
+    return sorted(all_records, key=lambda d: d['datetime']) \
+           if 'datetime' in  raw_records[0].keys() \
+           else all_records
 
 def sequential_insert(records):
+    if len(records) == 0:
+        return
+
     attributes = records[0].keys()
     formatted_attributes = ', '.join(attributes)
     placeholders = ', '.join(['%s' for i in range(len(attributes))])

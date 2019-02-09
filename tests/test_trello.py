@@ -3,12 +3,19 @@ import json
 
 from freezegun import freeze_time
 import psycopg2
+import pytest
 
 from taskawareness import trello
 
-
-# TODO make a fixture that sets up and tears down tables
 # TODO make a fixture that sets up different kinds of cards as different variables
+# TODO consider parameterizing tests or using scenarios when appropriate
+
+@pytest.fixture
+def recreate_tables():
+    conn, cur = trello.connect_db()
+    # TODO make this relative project root
+    cur.execute(open('../schema.sql', 'r').read())
+    conn.commit()
 
 def test_archived_closed_card():
     action = {
@@ -235,9 +242,7 @@ def test_connect_db_dict_cursor():
     assert type(conn).__name__ == 'connection'
     assert type(cur).__name__ == 'DictCursor'
 
-# TODO test sequential insert with one row and then at least 3 rows
-
-def test_sequential_insert_one_row():
+def test_sequential_insert_one_row(recreate_tables):
     records = [
         {
             'datetime': '2019-01-30 00:50:47',
@@ -247,10 +252,7 @@ def test_sequential_insert_one_row():
         }
     ]
 
-    conn, cur = trello.connect_db()
-    # TODO make this relative project root
-    cur.execute(open('../schema.sql', 'r').read())
-    conn.commit()
+    recreate_tables
 
     trello.sequential_insert(records)
 
@@ -259,7 +261,50 @@ def test_sequential_insert_one_row():
 
     assert len(query_results) == 1
 
-def test_sequential_insert_three_rows():
+def test_sequential_insert_three_rows(recreate_tables):
+    records = [
+        {
+            'datetime': '2019-01-30 00:50:47',
+            'board_id': '5c4ef5558ac287209796dace',
+            'card_id': '5c50f4ddb89030449f74f47b',
+            'card_name': 'Testing 1'
+        },
+        {
+            'datetime': '2019-01-30 00:50:47',
+            'board_id': '5c4ef5558ac287209796dace',
+            'card_id': '5c50f4ddb89030449f74f5fc',
+            'card_name': 'Testing 2'
+        },
+        {
+            'datetime': '2019-01-30 00:50:47',
+            'board_id': '5c4ef5558ac287209796dace',
+            'card_id': '5c50f4ddb89030449f74f8df',
+            'card_name': 'Testing 3'
+        }
+    ]
+
+    recreate_tables
+
+    trello.sequential_insert(records)
+
+    query = 'SELECT datetime, board_id, card_id, card_name FROM cards;'
+    query_results = trello.execute_select(query)
+
+    assert len(query_results) == 3
+
+def test_sequential_insert_no_rows(recreate_tables):
+    records = []
+
+    recreate_tables
+
+    trello.sequential_insert(records)
+
+    query = 'SELECT datetime, board_id, card_id, card_name FROM cards;'
+    query_results = trello.execute_select(query)
+
+    assert len(query_results) == 0
+
+def test_execute_select_all_attributes(recreate_tables):
     records = [
         {
             'datetime': '2019-01-30 00:50:47',
@@ -281,24 +326,87 @@ def test_sequential_insert_three_rows():
         }
     ]
 
-    conn, cur = trello.connect_db()
-    # TODO make this relative project root
-    cur.execute(open('../schema.sql', 'r').read())
-    conn.commit()
+    recreate_tables
 
     trello.sequential_insert(records)
 
-    query = 'SELECT datetime, board_id, card_id, card_name FROM cards;'
+    query = 'SELECT id, datetime, board_id, card_id, card_name FROM cards;'
     query_results = trello.execute_select(query)
 
-    assert len(query_results) == 3
-
-# TODO test execute select with different attributes you select in the query given the same data (all attribute, no date, no ids)
+    assert all([set(result.keys()) == set(['id', 'datetime', 'board_id', 'card_id', 'card_name']) for result in query_results])
 
 
-# TODO test store archived cards if I didn't happen to archive cards for that day
-# TODO test store archived cards if I archived three cards for that day
-def test_store_archived_cards(monkeypatch):
+def test_execute_select_no_date(recreate_tables):
+    records = [
+        {
+            'datetime': '2019-01-30 00:50:47',
+            'board_id': '5c4ef5558ac287209796dace',
+            'card_id': '5c50f4ddb89030449f74f47b',
+            'card_name': 'Testing 1'
+        },
+        {
+            'datetime': '2019-01-30 00:50:47',
+            'board_id': '5c4ef5558ac287209796dbcf',
+            'card_id': '5c50f4ddb89030449f74f5fc',
+            'card_name': 'Testing 2'
+        },
+        {
+            'datetime': '2019-01-30 00:50:47',
+            'board_id': '5c4ef5558ac287209796deac',
+            'card_id': '5c50f4ddb89030449f74f8df',
+            'card_name': 'Testing 3'
+        }
+    ]
+
+    recreate_tables
+
+    trello.sequential_insert(records)
+
+    query = 'SELECT id, board_id, card_id, card_name FROM cards;'
+    query_results = trello.execute_select(query)
+
+    assert all([set(result.keys()) == set(['id', 'board_id', 'card_id', 'card_name']) for result in query_results])
+
+def test_execute_select_no_ids(recreate_tables):
+    records = [
+        {
+            'datetime': '2019-01-30 00:50:47',
+            'board_id': '5c4ef5558ac287209796dace',
+            'card_id': '5c50f4ddb89030449f74f47b',
+            'card_name': 'Testing 1'
+        },
+        {
+            'datetime': '2019-01-30 00:50:47',
+            'board_id': '5c4ef5558ac287209796dbcf',
+            'card_id': '5c50f4ddb89030449f74f5fc',
+            'card_name': 'Testing 2'
+        },
+        {
+            'datetime': '2019-01-30 00:50:47',
+            'board_id': '5c4ef5558ac287209796deac',
+            'card_id': '5c50f4ddb89030449f74f8df',
+            'card_name': 'Testing 3'
+        }
+    ]
+
+    recreate_tables
+
+    trello.sequential_insert(records)
+
+    query = 'SELECT datetime, card_name FROM cards;'
+    query_results = trello.execute_select(query)
+
+    assert all([set(result.keys()) == set(['datetime', 'card_name']) for result in query_results])
+
+def test_execute_select_no_data(recreate_tables):
+    recreate_tables
+
+    query = 'SELECT id, board_id, card_id, card_name FROM cards;'
+    query_results = trello.execute_select(query)
+
+    assert query_results == []
+
+def test_store_archived_one_card(monkeypatch, recreate_tables):
     def mock_fetch_actions():
         # TODO make this relative project root
         # TODO use this mock for testing DB storage functions
@@ -309,10 +417,7 @@ def test_store_archived_cards(monkeypatch):
 
     monkeypatch.setattr(trello, 'fetch_actions', mock_fetch_actions)
 
-    conn, cur = trello.connect_db()
-    # TODO make this relative project root
-    cur.execute(open('../schema.sql', 'r').read())
-    conn.commit()
+    recreate_tables
 
     actions = trello.fetch_actions()
 
@@ -324,6 +429,98 @@ def test_store_archived_cards(monkeypatch):
             'board_id': '5c4ef5558ac287209796dace',
             'card_id': '5c50f4ddb89030449f74f47b',
             'card_name': 'Testing'
+        }
+    ]
+
+    query = 'SELECT datetime, board_id, card_id, card_name FROM cards;'
+    actual_archived_cards = trello.execute_select(query)
+
+    assert actual_archived_cards == expected_archived_cards
+
+def test_store_archived_no_cards(monkeypatch, recreate_tables):
+    def mock_fetch_actions():
+        # TODO make this relative project root
+        # TODO use this mock for testing DB storage functions
+        with open('archived_card_action.json', 'r') as f:
+            data = json.loads(f.read())
+
+        return data
+
+    monkeypatch.setattr(trello, 'fetch_actions', mock_fetch_actions)
+
+    recreate_tables
+
+    actions = trello.fetch_actions()
+
+    trello.store_archived_cards(actions, '2019-01-30')
+
+    expected_archived_cards = []
+
+    query = 'SELECT datetime, board_id, card_id, card_name FROM cards;'
+    actual_archived_cards = trello.execute_select(query)
+
+    assert actual_archived_cards == expected_archived_cards
+
+def test_store_archived_deleted_card(monkeypatch, recreate_tables):
+    def mock_fetch_actions():
+        # TODO make this relative project root
+        # TODO use this mock for testing DB storage functions
+        with open('archive_delete_card_action.json', 'r') as f:
+            data = json.loads(f.read())
+
+        return data
+
+    monkeypatch.setattr(trello, 'fetch_actions', mock_fetch_actions)
+
+    recreate_tables
+
+    actions = trello.fetch_actions()
+
+    trello.store_archived_cards(actions, '2019-02-04')
+
+    expected_archived_cards = []
+
+    query = 'SELECT datetime, board_id, card_id, card_name FROM cards;'
+    actual_archived_cards = trello.execute_select(query)
+
+    assert actual_archived_cards == expected_archived_cards
+
+
+def test_store_archived_three_cards(monkeypatch, recreate_tables):
+    def mock_fetch_actions():
+        # TODO make this relative project root
+        # TODO use this mock for testing DB storage functions
+        with open('archived_three_cards_action.json', 'r') as f:
+            data = json.loads(f.read())
+
+        return data
+
+    monkeypatch.setattr(trello, 'fetch_actions', mock_fetch_actions)
+
+    recreate_tables
+
+    actions = trello.fetch_actions()
+
+    trello.store_archived_cards(actions, '2019-02-04')
+
+    expected_archived_cards = [
+        {
+            'datetime': '2019-02-05 01:14:01',
+            'board_id': '5c4ef5558ac287209796dace',
+            'card_id': '5c58e134bb05383311047074',
+            'card_name': 'card 1'
+        },
+        {
+            'datetime': '2019-02-05 01:14:02',
+            'board_id': '5c4ef5558ac287209796dace',
+            'card_id': '5c58e1352aa99c67e1f86803',
+            'card_name': 'card 2'
+        },
+        {
+            'datetime': '2019-02-05 01:14:04',
+            'board_id': '5c4ef5558ac287209796dace',
+            'card_id': '5c58e13714b9bb51dddcb7c8',
+            'card_name': 'card 3'
         }
     ]
 
