@@ -399,5 +399,3 @@ def test_store_archived_three_cards(monkeypatch, recreate_tables):
     actual_archived_cards = trello.execute_select(query)
 
     assert actual_archived_cards == expected_archived_cards
-
-  # TODO test get archived card first clearing the DB, storing the card and then invoving get archived card and then make assertions
