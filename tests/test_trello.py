@@ -179,27 +179,24 @@ def test_connect_db_dict_cursor():
     assert type(conn).__name__ == 'connection'
     assert type(cur).__name__ == 'DictCursor'
 
-def test_sequential_insert_one_row(recreate_tables):
-    records = [
+record_counts = [
+    (
+      [],
+      0
+    ),
+    (
+      [
         {
-            'datetime': '2019-01-30 00:50:47',
-            'board_id': '5c4ef5558ac287209796dace',
-            'card_id': '5c50f4ddb89030449f74f47b',
-            'card_name': 'Testing'
+          'datetime': '2019-01-30 00:50:47',
+          'board_id': '5c4ef5558ac287209796dace',
+          'card_id': '5c50f4ddb89030449f74f47b',
+          'card_name': 'Testing'
         }
-    ]
-
-    recreate_tables
-
-    trello.sequential_insert(records)
-
-    query = 'SELECT datetime, board_id, card_id, card_name FROM cards;'
-    query_results = trello.execute_select(query)
-
-    assert len(query_results) == 1
-
-def test_sequential_insert_three_rows(recreate_tables):
-    records = [
+      ],
+      1
+    ),
+    (
+      [
         {
             'datetime': '2019-01-30 00:50:47',
             'board_id': '5c4ef5558ac287209796dace',
@@ -218,8 +215,13 @@ def test_sequential_insert_three_rows(recreate_tables):
             'card_id': '5c50f4ddb89030449f74f8df',
             'card_name': 'Testing 3'
         }
-    ]
+      ],
+      3
+    )
+]
 
+@pytest.mark.parametrize("records,count",record_counts)
+def test_sequential_insert_one_row(recreate_tables, records, count):
     recreate_tables
 
     trello.sequential_insert(records)
@@ -227,21 +229,14 @@ def test_sequential_insert_three_rows(recreate_tables):
     query = 'SELECT datetime, board_id, card_id, card_name FROM cards;'
     query_results = trello.execute_select(query)
 
-    assert len(query_results) == 3
+    assert len(query_results) == count
 
-def test_sequential_insert_no_rows(recreate_tables):
-    records = []
-
-    recreate_tables
-
-    trello.sequential_insert(records)
-
-    query = 'SELECT datetime, board_id, card_id, card_name FROM cards;'
-    query_results = trello.execute_select(query)
-
-    assert len(query_results) == 0
-
-def test_execute_select_all_attributes(recreate_tables):
+@pytest.mark.parametrize("attributes",[
+  ['id', 'datetime', 'board_id', 'card_id', 'card_name'],
+  ['id', 'board_id', 'card_id', 'card_name'],
+  ['datetime', 'card_name']
+])
+def test_execute_select_all_attributes(recreate_tables, attributes):
     records = [
         {
             'datetime': '2019-01-30 00:50:47',
@@ -267,73 +262,12 @@ def test_execute_select_all_attributes(recreate_tables):
 
     trello.sequential_insert(records)
 
-    query = 'SELECT id, datetime, board_id, card_id, card_name FROM cards;'
+    formatted_attributes = ', '.join(attributes)
+
+    query = f'SELECT {formatted_attributes} FROM cards;'
     query_results = trello.execute_select(query)
 
-    assert all([set(result.keys()) == set(['id', 'datetime', 'board_id', 'card_id', 'card_name']) for result in query_results])
-
-
-def test_execute_select_no_date(recreate_tables):
-    records = [
-        {
-            'datetime': '2019-01-30 00:50:47',
-            'board_id': '5c4ef5558ac287209796dace',
-            'card_id': '5c50f4ddb89030449f74f47b',
-            'card_name': 'Testing 1'
-        },
-        {
-            'datetime': '2019-01-30 00:50:47',
-            'board_id': '5c4ef5558ac287209796dbcf',
-            'card_id': '5c50f4ddb89030449f74f5fc',
-            'card_name': 'Testing 2'
-        },
-        {
-            'datetime': '2019-01-30 00:50:47',
-            'board_id': '5c4ef5558ac287209796deac',
-            'card_id': '5c50f4ddb89030449f74f8df',
-            'card_name': 'Testing 3'
-        }
-    ]
-
-    recreate_tables
-
-    trello.sequential_insert(records)
-
-    query = 'SELECT id, board_id, card_id, card_name FROM cards;'
-    query_results = trello.execute_select(query)
-
-    assert all([set(result.keys()) == set(['id', 'board_id', 'card_id', 'card_name']) for result in query_results])
-
-def test_execute_select_no_ids(recreate_tables):
-    records = [
-        {
-            'datetime': '2019-01-30 00:50:47',
-            'board_id': '5c4ef5558ac287209796dace',
-            'card_id': '5c50f4ddb89030449f74f47b',
-            'card_name': 'Testing 1'
-        },
-        {
-            'datetime': '2019-01-30 00:50:47',
-            'board_id': '5c4ef5558ac287209796dbcf',
-            'card_id': '5c50f4ddb89030449f74f5fc',
-            'card_name': 'Testing 2'
-        },
-        {
-            'datetime': '2019-01-30 00:50:47',
-            'board_id': '5c4ef5558ac287209796deac',
-            'card_id': '5c50f4ddb89030449f74f8df',
-            'card_name': 'Testing 3'
-        }
-    ]
-
-    recreate_tables
-
-    trello.sequential_insert(records)
-
-    query = 'SELECT datetime, card_name FROM cards;'
-    query_results = trello.execute_select(query)
-
-    assert all([set(result.keys()) == set(['datetime', 'card_name']) for result in query_results])
+    assert all([set(result.keys()) == set(attributes) for result in query_results])
 
 def test_execute_select_no_data(recreate_tables):
     recreate_tables
