@@ -7,7 +7,6 @@ import pytest
 
 from taskawareness import trello
 
-# TODO make a fixture that sets up different kinds of cards as different variables
 # TODO consider parameterizing tests or using scenarios when appropriate
 
 @pytest.fixture
@@ -17,8 +16,9 @@ def recreate_tables():
     cur.execute(open('../schema.sql', 'r').read())
     conn.commit()
 
-def test_archived_closed_card():
-    action = {
+@pytest.fixture
+def fake_actions():
+    update_archive = {
         'id': '5c50f4e70a13222ac4421104',
         'idMemberCreator': '54adf4eebc4b592a63005ea9',
         'data': {
@@ -55,10 +55,8 @@ def test_archived_closed_card():
             'username': 'genohta'
         }
     }
-    assert trello.archived(action)
 
-def test_archived_update_card():
-    action = {
+    update_no_archive = {
         'id': '5c5628658c0eab75ed6b4b71',
         'idMemberCreator': '54adf4eebc4b592a63005ea9',
         'data': {
@@ -93,11 +91,9 @@ def test_archived_update_card():
             'initials': 'GO',
             'username': 'genohta'
             }
-        }
-    assert not trello.archived(action)
+    }
 
-def test_archived_create_card():
-    action = {
+    create_card = {
         'id': '5c56285ef443aa6100cb520e',
         'idMemberCreator': '54adf4eebc4b592a63005ea9',
         'data': {
@@ -130,7 +126,20 @@ def test_archived_create_card():
             'username': 'genohta'
         }
     }
-    assert not trello.archived(action)
+
+    return update_archive, update_no_archive, create_card
+
+def test_archived_closed_card(fake_actions):
+    archive_action, _, _ = fake_actions
+    assert trello.archived(archive_action)
+
+def test_archived_update_card(fake_actions):
+    _, update_action, _ = fake_actions
+    assert not trello.archived(update_action)
+
+def test_archived_create_card(fake_actions):
+    _, _, create_action = fake_actions
+    assert not trello.archived(create_action)
 
 def test_parse_datetime_utc():
     expected_datetime = datetime(2019, 1, 30, 0, 50, 47, 411000)
@@ -146,85 +155,13 @@ def test_parse_datetime_est():
     assert actual_datetime == expected_datetime
     assert actual_datetime.strftime('%Y-%m-%d %H:%M:%S') == '2019-01-29 19:50:47'
 
-def test_filter_date_true():
-    action = {
-        'id': '5c50f4e70a13222ac4421104',
-        'idMemberCreator': '54adf4eebc4b592a63005ea9',
-        'data': {
-            'list': {
-                'name': 'Do (Urgent and Important)',
-                'id': '5c4ef56ff04981732a524b3e'
-            },
-            'board': {
-                'shortLink': 'oKvCzrFR',
-                'name': 'I get to testing',
-                'id': '5c4ef5558ac287209796dace'
-            },
-            'card': {
-                'shortLink': 'lBvEcUwJ',
-                'idShort': 1,
-                'name': 'Testing',
-                'id': '5c50f4ddb89030449f74f47b',
-                'closed': True
-            },
-            'old': {
-                'closed': False
-            }
-        },
-        'type': 'updateCard',
-        'date': '2019-01-30T00:50:47.411Z',
-        'limits': {},
-        'memberCreator': {
-            'id': '54adf4eebc4b592a63005ea9',
-            'avatarHash': None,
-            'avatarUrl': None,
-            'fullName': 'Gen Ohta',
-            'idMemberReferrer': None,
-            'initials': 'GO',
-            'username': 'genohta'
-        }
-    }
-    assert trello.filter_date(action, '2019-01-29')
+def test_filter_date_true(fake_actions):
+    archive_action, _, _ = fake_actions
+    assert trello.filter_date(archive_action, '2019-01-29')
 
-def test_filter_date_false():
-    action = {
-        'id': '5c50f4e70a13222ac4421104',
-        'idMemberCreator': '54adf4eebc4b592a63005ea9',
-        'data': {
-            'list': {
-                'name': 'Do (Urgent and Important)',
-                'id': '5c4ef56ff04981732a524b3e'
-            },
-            'board': {
-                'shortLink': 'oKvCzrFR',
-                'name': 'I get to testing',
-                'id': '5c4ef5558ac287209796dace'
-            },
-            'card': {
-                'shortLink': 'lBvEcUwJ',
-                'idShort': 1,
-                'name': 'Testing',
-                'id': '5c50f4ddb89030449f74f47b',
-                'closed': True
-            },
-            'old': {
-                'closed': False
-            }
-        },
-        'type': 'updateCard',
-        'date': '2019-01-30T00:50:47.411Z',
-        'limits': {},
-        'memberCreator': {
-            'id': '54adf4eebc4b592a63005ea9',
-            'avatarHash': None,
-            'avatarUrl': None,
-            'fullName': 'Gen Ohta',
-            'idMemberReferrer': None,
-            'initials': 'GO',
-            'username': 'genohta'
-        }
-    }
-    assert not trello.filter_date(action, '2019-01-30')
+def test_filter_date_false(fake_actions):
+    archive_action, _, _ = fake_actions
+    assert not trello.filter_date(archive_action, '2019-01-30')
 
 def test_connect_db_cursor():
     conn, cur = trello.connect_db()
