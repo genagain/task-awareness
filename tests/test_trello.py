@@ -221,7 +221,7 @@ record_counts = [
 ]
 
 @pytest.mark.parametrize("records,count",record_counts)
-def test_sequential_insert_one_row(recreate_tables, records, count):
+def test_sequential(recreate_tables, records, count):
     recreate_tables
 
     trello.sequential_insert(records)
@@ -236,7 +236,7 @@ def test_sequential_insert_one_row(recreate_tables, records, count):
   ['id', 'board_id', 'card_id', 'card_name'],
   ['datetime', 'card_name']
 ])
-def test_execute_select_all_attributes(recreate_tables, attributes):
+def test_execute_select(recreate_tables, attributes):
     records = [
         {
             'datetime': '2019-01-30 00:50:47',
