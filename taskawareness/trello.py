@@ -9,8 +9,8 @@ import requests
 # TODO add docstrings to every method
 
 def fetch_actions():
-    key = open('./.api_key', 'r').read().strip('\n')
-    token = open('./.api_token', 'r').read().strip('\n')
+    key = os.environ['API_KEY']
+    token = os.environ['API_TOKEN']
 
     board_id = '56e6030fc8a3bbee27545990'
     url = f'https://api.trello.com/1/boards/{board_id}/actions'
