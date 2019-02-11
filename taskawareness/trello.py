@@ -11,8 +11,14 @@ def fetch_actions():
     key = open('./.api_key', 'r').read().strip('\n')
     token = open('./.api_token', 'r').read().strip('\n')
 
-    # TODO implement this with actual boardid
-    return []
+    board_id = '56e6030fc8a3bbee27545990'
+    url = f'https://api.trello.com/1/boards/{board_id}/actions'
+
+    querystring = {"limit":"300","key":key,"token":token}
+    response = requests.request("GET", url, params=querystring)
+    json_response = json.loads(response.text)
+
+    return json_response
 
 def archived(action):
     if action['type'] == 'updateCard':
