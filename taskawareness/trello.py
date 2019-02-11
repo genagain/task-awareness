@@ -39,8 +39,13 @@ def filter_date(action, date):
     return date == datetime_est.strftime('%Y-%m-%d')
 
 def connect_db(dict_cursor=False):
-    # TODO make this environment aware with some environment variable or somethin
-    conn = psycopg2.connect(os.environ['DATABASE_URL'])
+    database_url = os.environ['DATABASE_URL']
+
+    if any(env in database_url for env in ['dev', 'test']):
+        conn = psycopg2.connect(database_url)
+    else:
+        conn = psycopg2.connect(database_url, sslmode='require')
+
     if dict_cursor:
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     else:
