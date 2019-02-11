@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import os
 import json
 
 import psycopg2
@@ -11,8 +12,14 @@ def fetch_actions():
     key = open('./.api_key', 'r').read().strip('\n')
     token = open('./.api_token', 'r').read().strip('\n')
 
-    # TODO implement this with actual boardid
-    return []
+    board_id = '56e6030fc8a3bbee27545990'
+    url = f'https://api.trello.com/1/boards/{board_id}/actions'
+
+    querystring = {"limit":"300","key":key,"token":token}
+    response = requests.request("GET", url, params=querystring)
+    json_response = json.loads(response.text)
+
+    return json_response
 
 def archived(action):
     if action['type'] == 'updateCard':
@@ -32,8 +39,13 @@ def filter_date(action, date):
     return date == datetime_est.strftime('%Y-%m-%d')
 
 def connect_db(dict_cursor=False):
-    # TODO make this environment aware with some environment variable or somethin
-    conn = psycopg2.connect("dbname=taskawareness_dev user=postgres")
+    database_url = os.environ['DATABASE_URL']
+
+    if any(env in database_url for env in ['dev', 'test']):
+        conn = psycopg2.connect(database_url)
+    else:
+        conn = psycopg2.connect(database_url, sslmode='require')
+
     if dict_cursor:
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     else:
