@@ -6,7 +6,7 @@ from taskawareness import trello
 
 sched = BlockingScheduler()
 
-@sched.scheduled_job('cron', hour=4)
+@sched.scheduled_job('cron', hour=4, minute=15)
 def scheduled_job():
     now = datetime.now() - timedelta(hours=5)
     today = now.strftime('%Y-%m-%d')
