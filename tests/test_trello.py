@@ -1,5 +1,6 @@
 from datetime import datetime
 import json
+import os
 
 from freezegun import freeze_time
 import psycopg2
@@ -7,10 +8,9 @@ import pytest
 
 from taskawareness import trello
 
-# TODO consider parameterizing tests or using scenarios when appropriate
-
 @pytest.fixture
 def recreate_tables():
+    os.environ['DATABASE_URL'] = "dbname=taskawareness_test user=postgres"
     conn, cur = trello.connect_db()
     # TODO make this relative project root
     cur.execute(open('../schema.sql', 'r').read())
@@ -164,18 +164,18 @@ def test_filter_date_false(fake_actions):
     assert not trello.filter_date(archive_action, '2019-01-30')
 
 def test_connect_db_cursor():
+    os.environ['DATABASE_URL'] = "dbname=taskawareness_test user=postgres"
     conn, cur = trello.connect_db()
 
-    # TODO change this to taskawareness_test once I make the db connection environment aware
-    assert conn.dsn == 'dbname=taskawareness_dev user=postgres'
+    assert conn.dsn == 'dbname=taskawareness_test user=postgres'
     assert type(conn).__name__ == 'connection'
     assert type(cur).__name__ == 'cursor'
 
 def test_connect_db_dict_cursor():
+    os.environ['DATABASE_URL'] = "dbname=taskawareness_test user=postgres"
     conn, cur = trello.connect_db(dict_cursor=True)
 
-    # TODO change this to taskawareness_test once I make the db connection environment aware
-    assert conn.dsn == 'dbname=taskawareness_dev user=postgres'
+    assert conn.dsn == 'dbname=taskawareness_test user=postgres'
     assert type(conn).__name__ == 'connection'
     assert type(cur).__name__ == 'DictCursor'
 
@@ -276,6 +276,8 @@ def test_execute_select_no_data(recreate_tables):
     query_results = trello.execute_select(query)
 
     assert query_results == []
+
+# TODO consider parameterizing tests or using scenarios when appropriate
 
 def test_store_archived_one_card(monkeypatch, recreate_tables):
     def mock_fetch_actions():

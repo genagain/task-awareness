@@ -1,4 +1,5 @@
 from datetime import datetime, timedelta
+import os
 import json
 
 import psycopg2
@@ -39,7 +40,7 @@ def filter_date(action, date):
 
 def connect_db(dict_cursor=False):
     # TODO make this environment aware with some environment variable or somethin
-    conn = psycopg2.connect("dbname=taskawareness_dev user=postgres")
+    conn = psycopg2.connect(os.environ['DATABASE_URL'])
     if dict_cursor:
         cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     else:
