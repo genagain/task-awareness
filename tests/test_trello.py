@@ -12,8 +12,8 @@ from taskawareness import trello
 def recreate_tables():
     os.environ['DATABASE_URL'] = "dbname=taskawareness_test user=postgres"
     conn, cur = trello.connect_db()
-    # TODO make this relative project root
-    cur.execute(open('../schema.sql', 'r').read())
+    project_path = os.getcwd().replace('/tests','')
+    cur.execute(open(f'{project_path}/schema.sql', 'r').read())
     conn.commit()
 
 @pytest.fixture
@@ -281,9 +281,8 @@ def test_execute_select_no_data(recreate_tables):
 
 def test_store_archived_one_card(monkeypatch, recreate_tables):
     def mock_fetch_actions():
-        # TODO make this relative project root
-        # TODO use this mock for testing DB storage functions
-        with open('archived_card_action.json', 'r') as f:
+        project_path = os.getcwd().replace('/tests','')
+        with open(f'{project_path}/tests/fixtures/archived_card_action.json', 'r') as f:
             data = json.loads(f.read())
 
         return data
@@ -312,9 +311,8 @@ def test_store_archived_one_card(monkeypatch, recreate_tables):
 
 def test_store_archived_no_cards(monkeypatch, recreate_tables):
     def mock_fetch_actions():
-        # TODO make this relative project root
-        # TODO use this mock for testing DB storage functions
-        with open('archived_card_action.json', 'r') as f:
+        project_path = os.getcwd().replace('/tests','')
+        with open(f'{project_path}/tests/fixtures/archived_card_action.json', 'r') as f:
             data = json.loads(f.read())
 
         return data
@@ -336,9 +334,8 @@ def test_store_archived_no_cards(monkeypatch, recreate_tables):
 
 def test_store_archived_deleted_card(monkeypatch, recreate_tables):
     def mock_fetch_actions():
-        # TODO make this relative project root
-        # TODO use this mock for testing DB storage functions
-        with open('archive_delete_card_action.json', 'r') as f:
+        project_path = os.getcwd().replace('/tests','')
+        with open(f'{project_path}/tests/fixtures/archive_delete_card_action.json', 'r') as f:
             data = json.loads(f.read())
 
         return data
@@ -361,9 +358,8 @@ def test_store_archived_deleted_card(monkeypatch, recreate_tables):
 
 def test_store_archived_three_cards(monkeypatch, recreate_tables):
     def mock_fetch_actions():
-        # TODO make this relative project root
-        # TODO use this mock for testing DB storage functions
-        with open('archived_three_cards_action.json', 'r') as f:
+        project_path = os.getcwd().replace('/tests','')
+        with open(f'{project_path}/tests/fixtures/archived_three_cards_action.json', 'r') as f:
             data = json.loads(f.read())
 
         return data
