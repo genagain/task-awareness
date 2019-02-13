@@ -103,12 +103,6 @@ venv.bak/
 # mypy
 .mypy_cache/
 
-# Trello API Key
-.api_key
-
-# Trello API Token
-.api_token
-
 # JSON files in the tests directory
 tests/*.json
 
